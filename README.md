@@ -1,4 +1,4 @@
-# Simple-Create-SSH
+# Simple-Create-SSH (armbian stb)
 for create ssh 1x enter
 SANGAT Dilarang jika hanya untuk disalahgunakan!!!
 
