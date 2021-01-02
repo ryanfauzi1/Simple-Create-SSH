@@ -1,0 +1,33 @@
+#!/bin/bash
+url=https://bestvpnssh.com;l=singapore;u=1
+echo "Tunggu, Sedang Memproses..."
+ while true; do
+id=$(curl -s $url/select-server/$l/ssh|grep create-account/ssh\
+|grep singapore|awk -F "/ssh/" '{print $2}'|awk -F '/' '{print $1}'|awk "NR==$u")
+ if [ -f $id ]; then
+echo -e "\nSemua Server Singapore Bestvpnssh Habis, Coba lagi nanti!\n";exit
+ fi
+data=$(curl -s $url/create-account/ssh/$id/$l)
+sesi=$(echo $data|grep sess|awk -F 'sess=' '{print $2}'|awk -F '"' '{print $1}')
+csrf=$(echo $data|awk -F 'csrf" value="' '{print $2}'|awk -F '"' '{print $1}')
+curl -c /tmp/ck.json -s "$url/plugins/captcha.php?width=100&height=34&characters=5" > /tmp/capca.jpg
+tesseract /tmp/capca.jpg /tmp/capca 2>/dev/null;rm -rf /tmp/capca.jpg
+user=$(tr -dc a-z0-9 </dev/urandom|head -c 7)
+result=$(curl -s -b /tmp/ck.json "https://bestvpnssh.com/c-user.php?sess=$sesi" \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' \
+  -d "username=$user&password=123q&captcha=$(cat /tmp/capca.txt|awk 'NR==1')&type=ssh&server=$id&csrf=$csrf")
+rm -rf /tmp/capca.txt /tmp/ck.json
+port=$(echo $result|awk -F 'SSL Port:</b> ' '{print $2}'|awk -F '<' '{print $1}')
+ if [ -f $port ]; then
+((u++));continue
+else
+clear;echo -e "Well done! You account was successfully created.\n"
+echo "Server: $(echo $result|awk -F 'Server: ' '{print $2}'|awk -F ' / Please' '{print $1}')"
+echo -e "Username: bestvpnssh-$user\nPassword: 123q"
+echo "Created date: $(echo $result|awk -F 'Created date:</b> ' '{print $2}'|awk -F '<' '{print $1}')"
+echo "Expired date: $(echo $result|awk -F 'Expired date:</b> ' '{print $2}'|awk -F '<' '{print $1}')"
+echo "SSL Port: $port"
+echo "OpenSSH & Dropbear: $(echo $result|awk -F 'Dropbear:</b> ' '{print $2}'|awk -F '<' '{print $1}')"
+echo -e "UDP / BadVPN Port: $(echo $result|awk -F 'BadVPN Port:</b> ' '{print $2}'|awk -F '<' '{print $1}')\n";exit
+ fi
+done
